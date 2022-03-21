@@ -28,15 +28,3 @@ Your solution must use/be compatible with `Node.js` version `15.5.1`.
 ## Tests
 
 Run `npm install` to install all dependencies and then run `npm run test` to run the unit tests. These should all pass if your solution has been implemented correctly.
-
-Good luck!
-
-## License
-
-At CodeScreen, we strongly value the integrity and privacy of our assessments. As a result, this repository is under exclusive copyright, which means you **do not** have permission to share your solution to this test publicly (i.e., inside a public GitHub/GitLab repo, on Reddit, etc.). <br>
-
-## Submitting your solution
-
-Please push your changes to the `main branch` of this repository. You can push one or more commits. <br>
-
-Once you are finished with the task, please click the `Complete task` link on <a href="https://app.codescreen.com/#/codescreentest55f97908-80c5-43b1-bc5c-96248c47fa5c" target="_blank">this screen</a>.

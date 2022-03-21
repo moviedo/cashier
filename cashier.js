@@ -40,8 +40,6 @@ export function getCurrentCash(cashier) {
     return acc
   }, [])
 
-  console.log('list', list)
-
   return _.sortBy(list).reverse()
 }
 
@@ -88,8 +86,3 @@ function hasValidDenominations(purchaseBills=[]) {
 function getChange(cashier, purchasePrice) {
   return []
 }
-
-// console.log('pay(cashier, 25, [10, 10, 5])', pay(newCashier('$'), 25, [10, 10, 5]))
-// console.log('hasValidDenominations([10, 10, 5])', hasValidDenominations([10, 10, 5]))
-// console.log('newCashier([10, 10, 5])', newCashier([10, 10, 5]))
-console.log('getCurrentCash newCashier([10, 10, 5])', getCurrentCash(newCashier([10, 10, 5])))

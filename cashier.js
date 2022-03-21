@@ -66,11 +66,9 @@ export function pay(cashier, purchasePrice, purchaseBills) {
   
   try {
     const currentCashier = newCashier(purchaseBills.concat(getCurrentCash(cashier)))
-    const change = getChange(currentCashier, purchasePrice)
-    console.log('change', change)
+    const change = getChange(currentCashier, getCurrencyValue(purchaseBills) - purchasePrice)
     return {success: true, cashier: currentCashier, change}
   } catch(e) {
-    console.log('e', e)
     return {success: false, cashier, error: "NOT ENOUGH CHANGE"} 
   }
 }
@@ -85,17 +83,18 @@ function hasValidDenominations(purchaseBills=[]) {
   return purchaseBills.every(currency => validDenomations.hasOwnProperty(`${currency}`))
 }
 
-function getChange(cashier, purchasePrice) {
-  const expectedChange = getCurrencyValue(getCurrentCash(cashier)) - purchasePrice
+function getChange(cashier, expectedChange) {
   let hasError = false
   
+  if (expectedChange === 0) return []
   if (expectedChange < 0) throw Error('NOT ENOUGH CHANGE')
+
   const change = changeIntoDenominations(expectedChange)
   change.forEach(i => {
     if (cashier[`${i}`] === 0) {
       hasError = true
     } else {
-      cashier[`${i}`] = cashier[`${i}`]--
+      cashier[`${i}`] = --cashier[`${i}`]
     }
   })
 

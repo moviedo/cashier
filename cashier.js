@@ -1,4 +1,5 @@
 import _ from 'lodash'
+import currencyjs from 'currency.js'
 
 /**
  * creates a new cashier
@@ -6,22 +7,32 @@ import _ from 'lodash'
  */
 export function newCashier(currency) {
   const denominations = {
-    '100': 0,
-    '50': 0,
-    '20': 0,
-    '10': 0,
-    '5': 0,
-    '2': 0,
-    '1': 0,
-    '0.5': 0,
-    '0.25': 0,
-    '0.1': 0,
-    '0.05': 0,
-    '0.01': 0,
+    bills: {
+      '100': 0,
+      '50': 0,
+      '20': 0,
+      '10': 0,
+      '5': 0,
+      '2': 0,
+      '1': 0,
+    },
+    cents: {
+      '0.5': 0,
+      '0.25': 0,
+      '0.1': 0,
+      '0.05': 0,
+      '0.01': 0,
+    }
   }
 
   if (_.isArray(currency)) {
-    currency.forEach(item => denominations[`${item}`] = ++denominations[`${item}`]) 
+    currency.forEach(item => {
+      if (currencyjs(item).dollars()) {
+        denominations.bills[`${item}`] += 1
+      } else {
+        denominations.cents[`${item}`] += 1
+      }
+    }) 
   }
 
   return denominations
@@ -32,7 +43,11 @@ export function newCashier(currency) {
  *    Output example: [100, 50, 50, 5, 2, 1, 1, 0.05, 0.01, 0.01]
  */
 export function getCurrentCash(cashier) {
-  const list = _.reduce(cashier, (acc, value, key) => {
+  return getCashHelper(cashier.bills).concat(getCashHelper(cashier.cents))
+}
+
+function getCashHelper(currencies) {
+  const list = _.reduce(currencies, (acc, value, key) => {
     if (value > 0) {
       Array(value).fill(0).forEach(() => acc.push(parseFloat(key)))
     }
@@ -77,28 +92,59 @@ export function pay(cashier, purchasePrice, purchaseBills) {
 }
 
 function getCurrencyValue(purchaseBills=[]) {
-  return purchaseBills.reduce((currency, acc) => acc + currency, 0)
+  return purchaseBills.reduce((currency, acc) => currencyjs(acc).add(currency), 0).value
 }
 
 function hasValidDenominations(purchaseBills=[]) {
   const validDenomations = newCashier('$')
 
-  return purchaseBills.every(currency => validDenomations.hasOwnProperty(`${currency}`))
+  return purchaseBills.every(currency => validDenomations.bills.hasOwnProperty(`${currency}`) || validDenomations.cents.hasOwnProperty(`${currency}`))
 }
 
 function getChange(cashier, change) {
+  const origChange = change
+  const origCashier = _.cloneDeep(cashier)
   if (change === 0) return { cashier, change: []}
 
-  const notes = getCurrentCash(cashier)
-  const noteCounter = []
+  let notes = getCurrentCash(cashier)
+  let noteCounter = []
 
-  notes.forEach(note => {
+  notes.forEach(note => {    
     if (change >= note) {
       noteCounter.push(note)
-      change = change - note
-      cashier[`${note}`] = --cashier[`${note}`]
+      change = currencyjs(change).subtract(note).value
+      currencyjs(note).dollars() ? cashier.bills[`${note}`] -= 1 : cashier.cents[`${note}`] -= 1
     }
   })
+
+  if (change > 0) {
+    noteCounter = []
+    change = origChange
+    cashier = origCashier
+
+    if (currencyjs(change).dollars()) {
+      getCashHelper(cashier.bills).forEach(note => { 
+        const dollars = currencyjs(change).dollars()
+
+        if (dollars % note === 0) {
+          noteCounter.push(note)
+          change = currencyjs(change).subtract(note).value
+          cashier.bills[`${note}`] -= 1
+        }
+      })
+    }
+
+    if (currencyjs(change).cents()) {
+      getCashHelper(cashier.cents).forEach(note => {  
+        const cents = currencyjs(change).cents()
+        if (cents % currencyjs(note).cents() === 0) {
+          noteCounter.push(note)
+          change = currencyjs(change).subtract(note).value
+          cashier.cents[`${note}`] -= 1
+        }
+      })
+    }
+  }
 
   if (change > 0) throw Error('NOT ENOUGH CHANGE')
 

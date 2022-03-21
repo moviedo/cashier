@@ -67,8 +67,10 @@ export function pay(cashier, purchasePrice, purchaseBills) {
   try {
     const currentCashier = newCashier(purchaseBills.concat(getCurrentCash(cashier)))
     const change = getChange(currentCashier, purchasePrice)
+    console.log('change', change)
     return {success: true, cashier: currentCashier, change}
   } catch(e) {
+    console.log('e', e)
     return {success: false, cashier, error: "NOT ENOUGH CHANGE"} 
   }
 }
@@ -84,5 +86,48 @@ function hasValidDenominations(purchaseBills=[]) {
 }
 
 function getChange(cashier, purchasePrice) {
-  return []
+  const expectedChange = getCurrencyValue(getCurrentCash(cashier)) - purchasePrice
+  let hasError = false
+  
+  if (expectedChange < 0) throw Error('NOT ENOUGH CHANGE')
+  const change = changeIntoDenominations(expectedChange)
+  change.forEach(i => {
+    if (cashier[`${i}`] === 0) {
+      hasError = true
+    } else {
+      cashier[`${i}`] = cashier[`${i}`]--
+    }
+  })
+
+  if (hasError) throw Error('NOT ENOUGH CHANGE')
+
+  return change
+}
+
+function changeIntoDenominations(change) {
+  const notes = [
+    100,
+    50,
+    20,
+    10,
+    5,
+    2,
+    1,
+    0.5,
+    0.25,
+    0.10,
+    0.05,
+    0.01,
+  ]
+  const noteCounter = []
+  
+  for (let i = 0; i < notes.length; i++) {
+    const noteVal = parseFloat(notes[i])
+    if (change >= noteVal) {
+      noteCounter.push(noteVal)
+      change = change - noteVal
+    }
+  }
+
+  return noteCounter
 }
